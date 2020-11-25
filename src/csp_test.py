@@ -1,4 +1,4 @@
-import constraint
+#import constraint
 
 class SchedulerConstraint(constraint.Constraint):
     no_simultaneous = 1 # prof cant have simultaneuous class times

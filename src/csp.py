@@ -1,6 +1,5 @@
 #import constraint
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Dict, List, Optional
 import json
 
 
@@ -15,18 +14,18 @@ class Constraint():
 
 class CSP():
     def __init__(self, variables, domains): 
-        self.variables = variables # list
-        self.domains = domains # {Variable: Domain} dict
-        self.constraints = {} # {Variable: [Constraints]} dict
+        self.variables = variables # list of classes
+        self.domains = domains # {class: [[time], [room], [prof]]} dict
+        self.constraints = {} # {class: [Constraints]} dict
         for variable in self.variables:
             self.constraints[variable] = []
 
     def add_constraint(self, constraint):
         for variable in constraint.variables:
             if variable not in self.variables:
-                raise LookupError("Variable in constraint not in CSP")
+                raise LookupError("Variable not in CSP")
             else:
-                self.constraints[variable].append(constraint)  #i changed this
+                self.constraints[variable].append(constraint) 
 
     def consistent(self, variable, assignment):
         # assignment is a dictionary {v,d}
@@ -39,12 +38,8 @@ class CSP():
         # base case: all variables are assigned
         if len(assignment) == len(self.variables):
             return assignment
-
-        """   
-        for a in assignment:
-            if len(assignment[a]) == len(self.values):
-                return assignment
-        """
+        
+        
 
         unassigned = [
             v
@@ -66,7 +61,7 @@ class CSP():
                         if result is not None:
                             return result
         return None
-        #fix this ^
+        #triply nested forloop lol
 
 class connectedClasses(Constraint): #classes that people usually take together should be @ different times
     def __init__(self, class1, class2):
@@ -83,25 +78,56 @@ class connectedClasses(Constraint): #classes that people usually take together s
 
 class ProfSameTime(Constraint): #profs cant have two simultaneous classes— would we need to add this constraint for every combo of classes?
     def __init__(self, class1, class2):
+        super().__init__([class1, class2])
         self.class1 = class1
         self.class2 = class2
 
     def satisfied(self, assignment): #if a prof has two simultaneous classes, bad
-        if assignment[self.class1][2] == assignment[self.class2][2]: #where 2 represents prof
-            if assignment[self.class1][0] == assignment[self.class2][0]: #where 0 represents time
-                return False
+        if self.class1 not in assignment or self.class2 not in assignment:
             return True
+        if assignment[self.class1][2] == assignment[self.class2][2] and assignment[self.class1][0] == assignment[self.class2][0]: #where 2 represents prof
+            return False
+        return True
 
 class SameRoomSameTime(Constraint): #if 2 classes share the same room at the same time, bad
     def __init__(self, class1, class2):
+        super().__init__([class1, class2])
         self.class1 = class1
         self.class2 = class2
 
     def satisfied(self, assignment):
-        if assignment[self.class1][1] == assignment[self.class2][1]: #where 1 represents room
-            if assignment[self.class1][0] == assignment[self.class2][0]: #where 0 represents time
-                return False
+        if self.class1 not in assignment or self.class2 not in assignment:
             return True
+        if assignment[self.class1][1] == assignment[self.class2][1] and assignment[self.class1][0] == assignment[self.class2][0]: #where 1 is room, 0 is time
+            return False
+        return True
+
+class dontKillOurProfs(Constraint):
+    def __init__(self, professors, classes):
+        super().__init__(classes)
+        self.professors = professors
+        #assignment = {class: [time, room, prof]} dict
+
+    def satisfied(self, assignment):
+        profs = dict.fromkeys(self.professors, 0) # {professor: num_of_classes} dict
+        #print(assignment)
+        for element in assignment.values():
+            profs[element[2]] = profs[element[2]] + 1
+            
+        for p in profs:
+            if profs[p] > 2:
+                return False
+        return True
+
+class noTwoConsecutive(Constraint):
+    def __init__(self, class1, class2, times):
+        super().__init__([class1, class2])
+        self.class1 = class1
+        self.class2 = class2
+        self.times = times
+
+    def satisfied(self, assignment):
+        return True
 
 if __name__ == "__main__":
     professors = ["Gordon", "Hunsberger", "Smith", "Waterman", "Walter", "Meireles", "Gommerstadt", "Lemieszewski", "Ellman", "Lambert", "Saravanan", "Williams"]
@@ -113,16 +139,26 @@ if __name__ == "__main__":
     labs = [] # todo : add lab times?
               # todo : add intensives back in (these are 2 hour blocks)
 
-    VARIABLES = classes #i changed this
+    VARIABLES = classes
     #DOMAINS = [professors, classes, rooms, times]
     domain = {}
     i = 0
     for clas in classes: 
         domain[clas] = [times, rooms, professors] #so a list of lists...
 
-
+    # CONSTRAINTS START HERE
     scheduler = CSP(VARIABLES, domain)
     scheduler.add_constraint(connectedClasses("102", "145"))
+
+    # TODO: optimize this so that it doesn't do O(n^2)
+    for c1 in classes:
+        for c2 in classes:
+            if c1 != c2:
+                scheduler.add_constraint(ProfSameTime(c1, c2))
+                scheduler.add_constraint(SameRoomSameTime(c1, c2))
+    
+    scheduler.add_constraint(dontKillOurProfs(professors, classes))
+        
     result = scheduler.backtracking_search()
     if result is None:
         print("nnnnnone")
