@@ -1,4 +1,3 @@
-#import constraint
 from abc import ABC, abstractmethod
 from itertools import combinations
 import json
@@ -63,20 +62,6 @@ class CSP():
                             #self.solutionList.append(result)
         #triply nested forloop lol
         return None
-        """
-        if len(self.solutionList) == 0:
-            return None
-        else:
-            for solution in self.solutionList:
-                unassignedProfessors = ["Gordon", "Hunsberger", "Smith", "Waterman", "Gommerstadt", "Lemieszewski", "Ellman", "Lambert", "Saravanan", "Williams"]
-                for course in solution:
-                    if course[2] not in unassignedProfessors: #aka this prof has already been assigned a class
-                        continue 
-                    else:
-                        unassignedProfessors.remove(course[2])
-                if len(unassignedProfessors) == 0:
-                    return solution
-        """
 
 class connectedClasses(Constraint): #classes that people usually take together should be @ different times
     def __init__(self, class1, class2):
@@ -186,7 +171,7 @@ if __name__ == "__main__":
     rooms = ["SP309", "SP105", "SP201", "SP206", "SP212", "Asprey Lab"]
     times = ["M/W 9:00", "M/W 10:30", "M/W 12:00", "M/W 1:30", 
              "T/R 9:00", "T/R 10:30", "T/R 12:00", "T/R 1:30", "T/R 3:10", "T/R 4:35", 
-             "W/F 9:00", "W/F 10:30", "W/F 12:00", "W/F 1:30" ]
+             "W/F 9:00", "W/F 10:30", "W/F 12:00", "W/F 1:30"]
     labs = [] # TODO : add lab times?
               # TODO : add intensives back in (these are 2 hour blocks)
 
@@ -209,10 +194,13 @@ if __name__ == "__main__":
 
     print("classsessssss", classes[0:4])
 
-    scheduler.add_constraint(assignClassToProfessor(["Hunsberger", "Gordon", "Smith"], classes[0: 4])) #101
-    scheduler.add_constraint(assignClassToProfessor(["Gommerstadt", "Lemieszewski", "Ellman"], classes[4 : 6]))
-    scheduler.add_constraint(assignClassToProfessor(["Waterman"], ["144", "224"]))
-    scheduler.add_constraint(assignClassToProfessor(["Gordon", "Ellman", "Lambert", "Lemieszewski"], ["145"]))
+    scheduler.add_constraint(assignClassToProfessor(["Hunsberger", "Gordon", "Smith"], classes[0:4])) # 101
+    scheduler.add_constraint(assignClassToProfessor(["Gommerstadt", "Lemieszewski", "Ellman"], classes[4:6])) # 102
+    scheduler.add_constraint(assignClassToProfessor(["Waterman"], ["144", "224"])) # 144, 224
+    scheduler.add_constraint(assignClassToProfessor(["Gordon", "Lambert", "Lemieszewski"], classes[7:9])) # 145
+    scheduler.add_constraint(assignClassToProfessor(["Saravanan"], ["203"])) # 203
+    scheduler.add_constraint(assignClassToProfessor(["Gordon", "Lambert"], ["240"])) # 240
+    scheduler.add_constraint(assignClassToProfessor(["Waterman", "Williams"], ["334"])) # 334
 
     # TODO: optimize this so that it doesn't do O(n^2)
     for c1 in classes:
@@ -232,5 +220,8 @@ if __name__ == "__main__":
 
 # TODO: fix -> all classes are MW
 # TODO: constraint for classes that need computers (for rooms)
+# TODO: maybe constraint for professors with 2 sections of a class (i.e. 101-51 and 101-52 are both Gordon)
 # TODO: add labs/intensives
 # TODO: add more class preferences
+
+# final report : when it doesnt find a solution, possibly go to infinite loop
