@@ -120,9 +120,9 @@ class dontKillOurProfs(Constraint):
         return True
 
 class assignClassToProfessor(Constraint):
-    def __init__(self, preferedProfs, classes):
+    def __init__(self, preferredProfs, classes):
         super().__init__(classes)
-        self.preferredProfs = preferedProfs
+        self.preferredProfs = preferredProfs
         self.classes = classes
         #assignment = {class: [time, room, prof]} dict
 
@@ -132,7 +132,6 @@ class assignClassToProfessor(Constraint):
                 return True
             else:
                 return False
-
 
 class everyProfessorHasClass(Constraint):
     def __init__(self, classes):
@@ -153,7 +152,20 @@ class everyProfessorHasClass(Constraint):
         else: # if all classes are assigned but not all professors have a class
             return False
 
+class classesThatNeedComputers(Constraint):
+    def __init__(self, classes, rooms):
+        super().__init__(classes)
+        self.classes = classes
+        self.rooms = rooms
 
+    def satisfied(self, assignment):
+        for c in assignment:
+            print(assignment[c][1])
+            if c in self.classes:
+                if assignment[c][1] in self.rooms:
+                    return True
+                else:
+                    return False
 
 class noTwoConsecutive(Constraint): #this is not finished...,,,
     def __init__(self, class1, class2, times):
@@ -172,9 +184,8 @@ if __name__ == "__main__":
     times = ["M/W 9:00", "M/W 10:30", "M/W 12:00", "M/W 1:30", 
              "T/R 9:00", "T/R 10:30", "T/R 12:00", "T/R 1:30", "T/R 3:10", "T/R 4:35", 
              "W/F 9:00", "W/F 10:30", "W/F 12:00", "W/F 1:30"]
-    labs = [] # TODO : add lab times?
-              # TODO : add intensives back in (these are 2 hour blocks)
-
+    labs = [] 
+            
     VARIABLES = classes
     #DOMAINS = [professors, classes, rooms, times]
     domain = {}
@@ -201,6 +212,8 @@ if __name__ == "__main__":
     scheduler.add_constraint(assignClassToProfessor(["Saravanan"], ["203"])) # 203
     scheduler.add_constraint(assignClassToProfessor(["Gordon", "Lambert"], ["240"])) # 240
     scheduler.add_constraint(assignClassToProfessor(["Waterman", "Williams"], ["334"])) # 334
+    
+    scheduler.add_constraint(classesThatNeedComputers(classes[0:4] + ["224"] + ["334"], ["SP309"]))
 
     # TODO: optimize this so that it doesn't do O(n^2)
     for c1 in classes:
