@@ -159,13 +159,29 @@ class classesThatNeedComputers(Constraint):
         self.rooms = rooms
 
     def satisfied(self, assignment):
+        print(assignment)
         for c in assignment:
-            print(assignment[c][1])
             if c in self.classes:
                 if assignment[c][1] in self.rooms:
                     return True
                 else:
                     return False
+
+"""
+class classesThatDoNotNeedComputers(Constraint):
+    def __init__(self, classes, rooms):
+        super().__init__(classes)
+        self.classes = classes
+        self.rooms = rooms
+
+    def satisfied(self, assignment):
+        for c in assignment:
+            if c in self.classes:
+                if assignment[c][1] not in self.rooms:
+                    return True
+                else:
+                    return False
+"""
 
 class noTwoConsecutive(Constraint): #this is not finished...,,,
     def __init__(self, class1, class2, times):
@@ -213,7 +229,8 @@ if __name__ == "__main__":
     scheduler.add_constraint(assignClassToProfessor(["Gordon", "Lambert"], ["240"])) # 240
     scheduler.add_constraint(assignClassToProfessor(["Waterman", "Williams"], ["334"])) # 334
     
-    scheduler.add_constraint(classesThatNeedComputers(classes[0:4] + ["224"] + ["334"], ["SP309"]))
+    scheduler.add_constraint(classesThatNeedComputers(["101-51", "101-52", "101-53", "101-54", "224", "334"], ["SP309"])) # TODO: sometimes CS101-54, CS224, CS334 are not in SP309...?? especially when SP309 is not the first of the room list
+    #scheduler.add_constraint(classesThatDoNotNeedComputers(["102-51", "102-52", "144", "145-51", "145-52", "195", "203", "240", "241"], ["SP105", "SP201", "SP206", "SP212", "Asprey Lab"]))
 
     # TODO: optimize this so that it doesn't do O(n^2)
     for c1 in classes:
