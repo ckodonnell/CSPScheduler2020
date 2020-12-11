@@ -243,8 +243,12 @@ class noLab(Constraint):
         self.classes = classes
         
     def satisfied(self, assignment):
-        if c in self.classes and assignment[c][3] != "NO LAB":
-            return False
+        for c in self.classes:
+            if c not in assignment:
+                return True
+            
+            if assignment[c][3] != "NO LAB":
+                return False
         return True
         
 class noLabSameTime(Constraint):
@@ -331,8 +335,6 @@ if __name__ == "__main__":
     else:
         print(json.dumps(result, indent=4, sort_keys=True))
 
-# TODO: fix -> all classes are MW
-# TODO: add labs/intensives, asprey lab intensives
-# TODO: add more class preferences
+# TODO: add intensives, asprey lab intensives
 
 # final report : when it doesnt find a solution, possibly go to infinite loop
