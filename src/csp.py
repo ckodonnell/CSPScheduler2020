@@ -75,6 +75,7 @@ class connectedClasses(Constraint): #classes that people usually take together s
     def satisfied(self, assignment):
         if self.class1 not in assignment or self.class2 not in assignment:
             return True
+            
         if assignment[self.class1][0] == assignment[self.class2][0]: #where 0 represents time?
             return False
         return True
@@ -88,7 +89,13 @@ class ProfSameTime(Constraint): #profs cant have two simultaneous classes— wou
     def satisfied(self, assignment): #if a prof has two simultaneous classes, bad
         if self.class1 not in assignment or self.class2 not in assignment:
             return True
+            
+        # for class times
         if assignment[self.class1][2] == assignment[self.class2][2] and assignment[self.class1][0] == assignment[self.class2][0]: #where 2 represents prof
+            return False
+            
+        # for lab times
+        if assignment[self.class1][2] == assignment[self.class2][2] and assignment[self.class1][3] == assignment[self.class2][3]: #where 2 represents prof
             return False
         return True
 
@@ -101,7 +108,13 @@ class SameRoomSameTime(Constraint): #if 2 classes share the same room at the sam
     def satisfied(self, assignment):
         if self.class1 not in assignment or self.class2 not in assignment:
             return True
+        
+        # for class times
         if assignment[self.class1][1] == assignment[self.class2][1] and assignment[self.class1][0] == assignment[self.class2][0]: #where 1 is room, 0 is time
+            return False
+            
+        # for lab times
+        if assignment[self.class1][3] == assignment[self.class2][3] and assignment[self.class1][1] == assignment[self.class2][1]:
             return False
         return True
 
@@ -193,12 +206,11 @@ class noTwoConsecutive(Constraint): #this is not finished...,,,
     def satisfied(self, assignment):
         return True
 
-# takes in two times
-# returns a boolean whether the two times overlap
 # check if a 1hr15 class block overlaps with a 2-hour lab block
-def noTimeOverlap(Constraint):
+class noTimeOverlap(Constraint):
     def __init__(self, classes):
         super().__init__(classes)
+        self.classes = classes
         
     def satisfied(self, assignment):
         """
@@ -220,10 +232,35 @@ def noTimeOverlap(Constraint):
             return True
         
         for c in assignment.values():
-            if c[3] is not None:
+            if c[3] is not "NO LAB":
                 if not checkOverlap(c[0], c[3]):
                     return False
         return True
+
+class noLab(Constraint):
+    def __init__(self, classes):
+        super().__init__(classes)
+        self.classes = classes
+        
+    def satisfied(self, assignment):
+        if c in self.classes and assignment[c][3] != "NO LAB":
+            return False
+        return True
+        
+class noLabSameTime(Constraint):
+    def __init__(self, class1, class2):
+        super().__init__([class1, class2])
+        self.class1 = class1
+        self.class2 = class2
+
+    def satisfied(self, assignment):
+        if self.class1 not in assignment or self.class2 not in assignment:
+            return True
+            
+        if assignment[self.class1][3] == assignment[self.class2][3]:
+            return False
+        else:
+            return True
 
 if __name__ == "__main__":
     professors = ["Gordon", "Hunsberger", "Smith", "Waterman", "Gommerstadt", "Lemieszewski", "Ellman", "Lambert", "Saravanan", "Williams"]
@@ -232,12 +269,15 @@ if __name__ == "__main__":
     times = ["M/W 9:00", "M/W 10:30", "M/W 12:00", "M/W 1:30", 
              "T/R 9:00", "T/R 10:30", "T/R 12:00", "T/R 1:30", "T/R 3:10", "T/R 4:35", 
              "W/F 9:00", "W/F 10:30", "W/F 12:00", "W/F 1:30"]
-    labtimes = ["T 9:00", "F 9:00", 
-                "M 1:00", "T 1:00", "W 1:00", "R 1:00", "F 1:00", 
-                "M 3:10", "T 3:10", "R 3:10", "F 3:10", 
-                "M 8:00", "T 8:00", "R 8:00"]
+    labtimes = ["M 3:10 (LAB)", "T 3:10 (LAB)", "R 3:10 (LAB)", "F 3:10 (LAB)",
+                "M 1:00 (LAB)", "T 1:00 (LAB)", "W 1:00 (LAB)", "R 1:00 (LAB)", "F 1:00 (LAB)", 
+                "T 9:00 (LAB)", "F 9:00 (LAB)", 
+                "M 8:00 (LAB)", "T 8:00 (LAB)", "R 8:00 (LAB)",
+                "NO LAB"]
+                
+    classes_with_labs = ["101-51", "101-52", "101-53", "101-54", "102-51", "102-52", "144", "145-51", "145-52", "203", "224"]
+    classes_without_labs = ["195", "240", "241", "334"]
     VARIABLES = classes
-    #DOMAINS = [professors, classes, rooms, times]
     domain = {}
     i = 0
     for clas in classes: 
@@ -253,7 +293,11 @@ if __name__ == "__main__":
     for c in list(combos_102_145):
         scheduler.add_constraint(connectedClasses(c[0], c[1]))
 
-    print("classsessssss", classes[0:4])
+    combos_classes_with_labs = combinations(classes_with_labs, 2)
+    for c in list(combos_classes_with_labs):
+        scheduler.add_constraint(noLabSameTime(c[0], c[1]))
+
+    #print("classsessssss", classes[0:4])
 
     scheduler.add_constraint(assignClassToProfessor(["Hunsberger", "Gordon", "Smith"], classes[0:4])) # 101
     scheduler.add_constraint(assignClassToProfessor(["Gommerstadt", "Lemieszewski", "Ellman"], classes[4:6])) # 102
@@ -268,6 +312,8 @@ if __name__ == "__main__":
     scheduler.add_constraint(classesThatNeedComputers(["101-51", "101-52", "101-53", "101-54", "224", "334"], ["SP309"]))
     scheduler.add_constraint(classesThatDoNotNeedComputers(["102-51", "102-52", "144", "145-51", "145-52", "195", "203", "240", "241"], ["SP105", "SP201", "SP206", "SP212"]))
 
+    scheduler.add_constraint(noLab(classes_without_labs))
+    
     scheduler.add_constraint(noTimeOverlap(classes))
     # TODO: optimize this so that it doesn't do O(n^2)
     for c1 in classes:
