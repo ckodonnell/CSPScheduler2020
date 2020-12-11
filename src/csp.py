@@ -159,15 +159,12 @@ class classesThatNeedComputers(Constraint):
         self.rooms = rooms
 
     def satisfied(self, assignment):
-        print(assignment)
         for c in assignment:
             if c in self.classes:
-                if assignment[c][1] in self.rooms:
-                    return True
-                else:
+                if assignment[c][1] not in self.rooms:
                     return False
+        return True
 
-"""
 class classesThatDoNotNeedComputers(Constraint):
     def __init__(self, classes, rooms):
         super().__init__(classes)
@@ -176,12 +173,12 @@ class classesThatDoNotNeedComputers(Constraint):
 
     def satisfied(self, assignment):
         for c in assignment:
+            #print(c)
             if c in self.classes:
                 if assignment[c][1] not in self.rooms:
-                    return True
-                else:
                     return False
-"""
+        return True
+
 
 class noTwoConsecutive(Constraint): #this is not finished...,,,
     def __init__(self, class1, class2, times):
@@ -196,7 +193,7 @@ class noTwoConsecutive(Constraint): #this is not finished...,,,
 if __name__ == "__main__":
     professors = ["Gordon", "Hunsberger", "Smith", "Waterman", "Gommerstadt", "Lemieszewski", "Ellman", "Lambert", "Saravanan", "Williams"]
     classes = ["101-51", "101-52", "101-53", "101-54", "102-51", "102-52", "144", "145-51", "145-52", "195", "203", "224", "240", "241", "334"]
-    rooms = ["SP309", "SP105", "SP201", "SP206", "SP212", "Asprey Lab"]
+    rooms = ["SP309", "SP105", "SP201", "SP206", "SP212"]
     times = ["M/W 9:00", "M/W 10:30", "M/W 12:00", "M/W 1:30", 
              "T/R 9:00", "T/R 10:30", "T/R 12:00", "T/R 1:30", "T/R 3:10", "T/R 4:35", 
              "W/F 9:00", "W/F 10:30", "W/F 12:00", "W/F 1:30"]
@@ -229,8 +226,8 @@ if __name__ == "__main__":
     scheduler.add_constraint(assignClassToProfessor(["Gordon", "Lambert"], ["240"])) # 240
     scheduler.add_constraint(assignClassToProfessor(["Waterman", "Williams"], ["334"])) # 334
     
-    scheduler.add_constraint(classesThatNeedComputers(["101-51", "101-52", "101-53", "101-54", "224", "334"], ["SP309"])) # TODO: sometimes CS101-54, CS224, CS334 are not in SP309...?? especially when SP309 is not the first of the room list
-    #scheduler.add_constraint(classesThatDoNotNeedComputers(["102-51", "102-52", "144", "145-51", "145-52", "195", "203", "240", "241"], ["SP105", "SP201", "SP206", "SP212", "Asprey Lab"]))
+    scheduler.add_constraint(classesThatNeedComputers(["101-51", "101-52", "101-53", "101-54", "224", "334"], ["SP309"]))
+    scheduler.add_constraint(classesThatDoNotNeedComputers(["102-51", "102-52", "144", "145-51", "145-52", "195", "203", "240", "241"], ["SP105", "SP201", "SP206", "SP212"]))
 
     # TODO: optimize this so that it doesn't do O(n^2)
     for c1 in classes:
@@ -251,7 +248,7 @@ if __name__ == "__main__":
 # TODO: fix -> all classes are MW
 # TODO: constraint for classes that need computers (for rooms)
 # TODO: maybe constraint for professors with 2 sections of a class (i.e. 101-51 and 101-52 are both Gordon)
-# TODO: add labs/intensives
+# TODO: add labs/intensives, asprey lab intensives
 # TODO: add more class preferences
 
 # final report : when it doesnt find a solution, possibly go to infinite loop
