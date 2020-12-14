@@ -1,9 +1,0 @@
-{
-    "python.pythonPath": "/Library/Frameworks/Python.framework/Versions/3.8/bin/python3",
-    "extensions.ignoreRecommendations": true,
-    "files.autoSave": "off",
-    "typescript.tsc.autoDetect": "off",
-    "npm.autoDetect": "off",
-    "debug.allowBreakpointsEverywhere": true,
-    "html.autoClosingTags": false
-}
