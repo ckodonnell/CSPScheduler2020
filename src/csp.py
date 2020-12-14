@@ -60,7 +60,6 @@ class CSP():
                             # if we didn't find the result, we will end up backtracking
                             if result is not None:
                                 return result
-                                #self.solutionList.append(result)
         #quadruply nested forloop lol
         return None
 
@@ -118,6 +117,7 @@ class SameRoomSameTime(Constraint): #if 2 classes share the same room at the sam
             return False
         return True
 
+#professors should not teach > 2 classes
 class dontKillOurProfs(Constraint):
     def __init__(self, professors, classes):
         super().__init__(classes)
@@ -168,6 +168,7 @@ class everyProfessorHasClass(Constraint):
         else: # if all classes are assigned but not all professors have a class
             return False
 
+#classes that need computers should take place in SP309
 class classesThatNeedComputers(Constraint):
     def __init__(self, classes, rooms):
         super().__init__(classes)
@@ -195,16 +196,6 @@ class classesThatDoNotNeedComputers(Constraint):
                     return False
         return True
         
-
-class noTwoConsecutive(Constraint): #this is not finished...,,,
-    def __init__(self, class1, class2, times):
-        super().__init__([class1, class2])
-        self.class1 = class1
-        self.class2 = class2
-        self.times = times
-
-    def satisfied(self, assignment):
-        return True
 
 # check if a 1hr15 class block overlaps with a 2-hour lab block
 class noTimeOverlap(Constraint):
@@ -237,7 +228,9 @@ class noTimeOverlap(Constraint):
                     return False
         return True
 
-class noLab(Constraint):
+
+#classes without labs must be assigned the value NO LAB in place of a lab time
+class noLab(Constraint): 
     def __init__(self, classes):
         super().__init__(classes)
         self.classes = classes
@@ -250,7 +243,8 @@ class noLab(Constraint):
             if assignment[c][3] != "NO LAB":
                 return False
         return True
-        
+
+# labs cannot occur at the same time
 class noLabSameTime(Constraint):
     def __init__(self, class1, class2):
         super().__init__([class1, class2])
@@ -266,13 +260,20 @@ class noLabSameTime(Constraint):
         else:
             return True
 
+#main method
 if __name__ == "__main__":
-    professors = ["Gordon", "Hunsberger", "Smith", "Waterman", "Gommerstadt", "Lemieszewski", "Ellman", "Lambert", "Saravanan", "Williams"]
-    classes = ["101-51", "101-52", "101-53", "101-54", "102-51", "102-52", "144", "145-51", "145-52", "195", "203", "224", "240", "241", "334"]
+    professors = ["Gordon", "Hunsberger", "Smith", "Waterman", "Gommerstadt", 
+                        "Lemieszewski", "Ellman", "Lambert", "Saravanan", "Williams"]
+
+    classes = ["101-51", "101-52", "101-53", "101-54", "102-51", "102-52", 
+                        "144", "145-51", "145-52", "195", "203", "224", "240", "241", "334"]
+
     rooms = ["SP309", "SP105", "SP201", "SP206", "SP212"]
+
     times = ["M/W 9:00", "M/W 10:30", "M/W 12:00", "M/W 1:30", 
              "T/R 9:00", "T/R 10:30", "T/R 12:00", "T/R 1:30", "T/R 3:10", "T/R 4:35", 
              "W/F 9:00", "W/F 10:30", "W/F 12:00", "W/F 1:30"]
+
     labtimes = ["M 3:10 (LAB)", "T 3:10 (LAB)", "R 3:10 (LAB)", "F 3:10 (LAB)",
                 "M 1:00 (LAB)", "T 1:00 (LAB)", "W 1:00 (LAB)", "R 1:00 (LAB)", "F 1:00 (LAB)", 
                 "T 9:00 (LAB)", "F 9:00 (LAB)", 
@@ -319,7 +320,6 @@ if __name__ == "__main__":
     scheduler.add_constraint(noLab(classes_without_labs))
     
     scheduler.add_constraint(noTimeOverlap(classes))
-    # TODO: optimize this so that it doesn't do O(n^2)
     for c1 in classes:
         for c2 in classes:
             if c1 != c2:
@@ -334,7 +334,3 @@ if __name__ == "__main__":
         print("nnnnnone")
     else:
         print(json.dumps(result, indent=4, sort_keys=True))
-
-# TODO: add intensives, asprey lab intensives
-
-# final report : when it doesnt find a solution, possibly go to infinite loop
