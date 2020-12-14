@@ -1,0 +1,5 @@
+The required libraries for this program include:
+
+1. itertools (for making combinations/permutations)
+2. abc (for using abstract methods like in the Constraint class)
+3. json (for printing)
